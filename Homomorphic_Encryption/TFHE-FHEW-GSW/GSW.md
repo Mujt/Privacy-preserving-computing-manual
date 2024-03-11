@@ -35,8 +35,6 @@ $4x+24y+33z+38w=20(mod89)$
    $$C \cdot \vec{s} = \mu \cdot \vec{s} + \vec{e}$$
    之后我们进行体系的构造：
    ### 密钥生成
-   KeyGen：我们随机生成一个私密向量 
-   $$s<sup>~</sup> \in Z<sub>q</sub><sup>n-1</sup> $$**
-   我们的密钥 $`\ \vec{s} = (s<sup>~</sup>,-1) , \vec{s} $\in$ Z<sub>q</sub><sup>n</sup> `$
+   KeyGen：我们随机生成一个私密向量
+   
    ### 加密算法ENC
-   Enc(
