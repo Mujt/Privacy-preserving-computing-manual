@@ -27,7 +27,7 @@
 
    以上便是一种典型的利用LWE进行数据加密解密的方法，即把一个bit的值映射到一个有限域的两头。
 
-   总结来说，一个LWE问题实例会随机生成一个比较大的矩阵 **$A$**（对应上述中的没有错误的线性方程组），和一个不公开的私密向量**s**（对应上述线性方程组的解）。给定一个**A**以及带有误差的乘积(**As**+**e**)，求出未知向量**s**的问题，叫做搜索LWE问题(DLWE)。还有一种LWE问题叫做决策LWE问题(DLWE)，是分辨看到的一组矩阵与向量到底是一个LWE实例(**A**,**As**+**e**)还是随机生成的(**A**,**v** $\in$ $Z_{q}^{m}$)。一个合理构造的SLWE与DLWE在格密码学中都被定义为困难的问题。
+   总结来说，一个LWE问题实例会随机生成一个比较大的矩阵 **$A$**（对应上述中的没有错误的线性方程组），和一个不公开的私密向量**s**（对应上述线性方程组的解）。给定一个**A**以及带有误差的乘积(**As**+**e**)，求出未知向量**s**的问题，叫做搜索LWE问题(DLWE)。还有一种LWE问题叫做决策LWE问题(DLWE)，是分辨看到的一组矩阵与向量到底是一个LWE实例(**A**,**As**+**e**)还是随机生成的(**A**,**v** $\in$ $\mathbb{Z}_{q}^{m}$)。一个合理构造的SLWE与DLWE在格密码学中都被定义为困难的问题。
 
    在我们懂了这种LWE的原理之后，我们继续学习GSW中如何用LWE问题来构造一个LFHE（Leveled Fully Homomorphic Encryption）近似全同态。
 ## 3. LFHE(Leveled Fully Homomorphic Encryption)
@@ -35,11 +35,11 @@
    $$C \cdot \vec{s} = \mu \cdot \vec{s} + \vec{e}$$
    之后我们进行体系的构造：
    ### 密钥生成
-   $KeyGen$：我们随机生成一个私密向量 $\widetilde{s}\in Z_{q}^{n-1}$ ，然后我们在这个向量的最末尾加上一个-1，构成我们的新向量（即密钥向量）
+   $KeyGen$：我们随机生成一个私密向量 $\widetilde{s}\in \mathbb{Z}_{q}^{n-1}$ ，然后我们在这个向量的最末尾加上一个-1，构成我们的新向量（即密钥向量）
    $$\overrightarrow{s} = (\widetilde{s},-1)$$
    ### 加密算法ENC
-   $Enc(\overrightarrow{s},\mu\in Z_{q})$:我们基于上述商城的密钥构建一个LWE问题实例。首先我们随机生成一个矩阵$A\in Z^{n\times(n-1)}$与一个随机噪声向量$\overrightarrow{e}\in x_{B}^{n}$，（$x_{B}^{n}$是一个最大绝对值为B的随机分布），基于此生成密文$C$：
-   $$C = \underbrace{(A,A\cdot\widetilde{s}+\overrightarrow{e})}_{LWE Instance}+\overbrace{\mu\cdot I_n}^{message}\in Z_{q}^{n\times n} $$
+   $Enc(\overrightarrow{s},\mu\in \mathbb{Z}_{q})$:我们基于上述商城的密钥构建一个LWE问题实例。首先我们随机生成一个矩阵$A\in \mathbb{Z}^{n\times(n-1)}$与一个随机噪声向量$\overrightarrow{e}\in x_{B}^{n}$，（$x_{B}^{n}$是一个最大绝对值为B的随机分布），基于此生成密文$C$：
+   $$C = \underbrace{(A,A\cdot\widetilde{s}+\overrightarrow{e})}_{LWE Instance}+\overbrace{\mu\cdot I_n}^{message}\in \mathbb{Z}_{q}^{n\times n} $$
    这里等式中的$I_n$是一个$n\times n$的单位矩阵。
 
    观察这里的密文构造方法，可以看出我们构造了一个LWE实例$(A,A\cdot \widetilde{s}+\overrightarrow{e})$，并将其拼接成了一个$n\times n$的矩阵，再将想要加密的信息$\mu\cdot I_n$叠加上去。*因为DLWE问题假设，我们可以把这个过程看作一个One-Time Pad，即叠加一个随机值的过程。* 这个过程在密码学中认为是安全的。
@@ -73,5 +73,89 @@
    观察输出结果，可以看出结果中是有明文相乘项。但是同样可以看出，结果中出现了两个随机噪声相关的量:$\mu_2\cdot\overrightarrow{e}_1$及$C_1\cdot\overrightarrow{e}_2$。
    如果想要正确还原出解密的结果，那必须保证噪声项不能大到足以淹没有效数据！我们针对这两项噪声进行分析：
    第一项噪声$\mu_2\cdot\overrightarrow{e}_1$，由于噪声绝对值上限为B，那么这一项的取值上限即为$\mu\cdot B$，为了使这一项的噪声尽量小，我们一次只加密1bit的数据，及$\mu$的最大值为1，这样该项噪声取值上限仍为B。   
-   第二项噪声$C_1\cdot\overrightarrow{e}$的大小似乎没有那么容易处理了。因为$C_1\in Z_{q}^{n\times n}$，即$C_1$中每个数的值上限有q这么大，我们计算第二项噪声得到的结果向量中的 每个数的数值最大会有$n\cdot B\cdot q$这么大，即使B的值非常小，这个数值仍非常容易突破噪声容量最大值(一般为$q/2$)。从而导致解密失败。 
+   第二项噪声$C_1\cdot\overrightarrow{e}$的大小似乎没有那么容易处理了。因为$C_1\in \mathbb{Z}_{q}^{n\times n}$，即$C_1$中每个数的值上限有q这么大，我们计算第二项噪声得到的结果向量中的 每个数的数值最大会有$n\cdot B\cdot q$这么大，即使B的值非常小，这个数值仍非常容易突破噪声容量最大值(一般该容量最大值小于$q/2$)。从而导致解密失败。 
 
+   ### 二进制分解
+   由上述分析可知，现在构造方法得到的密文无法保证乘法同态性（因为密文运算同态乘法后噪声过大，无法解密）。我们现在重新观察第二项噪声，其实可以发现$C_1\cdot \overrightarrow{e_2}$取值过大是因为$C_{ij} \in \mathbb{Z}_q$，即$C$矩阵的元素都是在$\mathbb{Z}_q$中取值的。**因为我们在解密时只需要看结果向量中的一项就可以判断明文$\mu$的大小，所以我们关心的也是结果向量中的一项的大小**。此时我们引入一个小工具：**二进制分解**。
+
+   如果我们拥有一个数字$x \in \mathbb{Z}_q$，我们可以将这个数字用一串bit表示出来（实际就是数字的二进制表示，但是是向量），定义其$\hat{x}$为$x$的二进制分解态：
+   $$
+   \hat{x}=(x_{\left \lceil log(q) \right \rceil -1},...,x_2,x_1,x_0)\in (0,1)^{\left \lceil log(q) \right \rceil}
+   $$
+   同理，如果我们有一个向量$v \in \mathbb{Z}_q^{n}$，我们对$v=(v_{n-1},...,v_{2},v_{1},v_{0})$进行二进制分解：
+   $$\hat{v}=(v_{0,\left \lceil log(q) \right \rceil-1},...,v_{0,0},v_{1,\left \lceil log(q) \right \rceil-1},...,v_{1,0},...,v_{\left \lceil log(q) \right \rceil-1,\left \lceil log(q) \right \rceil-1},...,v_{\left \lceil log(q) \right \rceil-1,0})$$
+   可知，此时$\hat{v} \in \mathbb{Z}_2^{n\times \left \lceil log(q) \right \rceil}$。
+
+   显然，如果我们想要分解一个$m \times n$的矩阵$C$，只需针对该矩阵的每行向量单独进行二进制分解即可。如下所示：
+   $$C = \begin{pmatrix}C_0 \\C_1 \\... \\C_{m-1}\end{pmatrix} \rightarrow \hat{C}=\begin{pmatrix}\hat{C_0} \\\hat{C_1} \\... \\\hat{C_{m-1}}\end{pmatrix}
+   $$
+   此时$\hat{C}\in \mathbb{Z}_2^{m\times (n\cdot \left \lceil log(q) \right \rceil)}$
+
+   如果我们想要将一个二进制分解态的矩阵还原，其实际为一个线性变换的过程，可以用乘以一个**二进制重组矩阵G**来实现。
+   $$\begin{aligned}
+   C &= \hat{C}\cdot G\\
+   &=\begin{pmatrix}\hat{C_0} \\\hat{C_1} \\... \\\hat{C_{m-1}}\end{pmatrix} \cdot G\\
+   &=\begin{pmatrix}C_{0,0,\left \lceil log(q) \right \rceil-1} &\dots& C_{0,0,0}& \dots &C_{0,n-1,\left \lceil log(q) \right \rceil-1}&\dots &C_{0,n-1,0}\\ \dots& \dots&\dots&\dots&\dots&\dots&\dots\\ \dots&\dots&\dots&\dots&\dots&\dots&\dots \\ C_{m-1,0,\left \lceil log(q) \right \rceil-1} &\dots& C_{m-1,0,0} &\dots& C_{m-1,n-1,\left \lceil log(q) \right \rceil-1}&\dots& C_{m-1,n-1,0} \end{pmatrix} \cdot G
+   \end{aligned}
+   $$
+
+   可以证明：
+   $$
+   G = \begin{pmatrix}
+   2^{\left \lceil q \right \rceil-1}& 0 & \dots & 0\\
+   \vdots& \vdots & \ddots & \vdots\\
+   2^1& 0 & \dots & 0\\
+   2^0& 0 & \dots & 0 \\
+   0&  2^{\left \lceil q \right \rceil-1}& \dots & 0\\
+   \vdots&  \vdots& \ddots & \vdots\\
+   0& 0 & \dots & 2^0 
+   \end{pmatrix}_{n\cdot \left \lceil log(q) \right \rceil\times n}
+   $$
+   事实上，我们观察G的最后一行为$G_n=(0,0,0,...,1)$，即只有最后一项为1其余均为0，这一点方便我们后续优化FHE系统的计算。
+
+   因为我们把二进制重组用矩阵G表示，因此我们也常把二进制分解这一过程用$G^{-1}(\cdot)$来表示，即$\hat{C}=G^{-1}(C)$，此时$\hat{C} \in \mathbb{Z}_2^{m \times m}$。
+
+   ### 在构造系统中加入二进制重组
+   首先上述讨论到了如果明文$\mu$过大，会导致乘法同态运算中第一个噪声项过大，因此我们一次加密一个二进制bit，即$\mu \in \{0,1\}$。
+
+   我们再进行加密时，首先需要构造LWE问题实例。在定义LWE各项系数的时候，为了使维度相符，我们选择$m=n\cdot \left \lceil log(q) \right \rceil$。然后我们选取随机矩阵$A \in \mathbb{Z}_q^{m\times (n-1)}，随机噪声$\overrightarrow{e} \in x_B^m$。密钥生成与之前过程一致，不再阐述，得到$\widetilde{s}$与$\overrightarrow{s}$。
+
+   此时加密方法与之前略有不同：
+   $$
+   C = (A,A\cdot \widetilde{s}+\overrightarrow{e}) + \mu\cdot G \in \mathbb{Z}_q^{m \times n}
+   $$
+   与之前不同的是，这里明文$\mu$乘的是重组矩阵而不是单位矩阵。当我们计算出$C$之后，我们不直接输出$C$，而是输出$C$的二进制分解态$\hat{C}=G^{-1}(C)$作为我们的密文。
+
+   解密方法：由于之前我们输出了C的二进制分解态，我们需要对其进行二进制重组再进行正常的解密运算（乘以私钥）。
+   $$\begin{aligned}
+   \hat{C}\cdot G \cdot \overrightarrow{s} &= C \cdot \overrightarrow{s}\\
+   &=\mu \cdot G \cdot \overrightarrow{s} - \overrightarrow{e}\end{aligned}
+   $$
+   在上述讨论二进制重组G的特点中，提及了G的特殊性。其实G中每一行只有一个元素是不为0的，其余皆为0，在解密时只需要观察得到的结果向量中，对应的位置的值是否在0附近（噪声在容限范围内）即可判断对应明文是0还是1。
+
+   加法同态比较容易验证，其仍是通过密文相加来获取明文相加结果，这里我直接给出结论：
+   $$
+   (\hat{C_1}+\hat{C_2}) \cdot G\cdot \overrightarrow{s} = (\mu_1+\mu_2)\cdot G \cdot \overrightarrow{s} - (\overrightarrow{e_1}+\overrightarrow{e_2})
+   $$
+   同样可以看出噪声是线性增长的。这种增长方式是较为友好的。关键是乘法同态，其运算过程仍为将密文矩阵相乘，下面我们通过解密来验证一下（这里直接给出结论，具体过程自己推导）：
+   $$
+   (\hat{C_1}\cdot\hat{C_2})\cdot G \cdot \overrightarrow{s} = (\mu_1\cdot \mu_2)\cdot G \cdot \overrightarrow{s} + \mu_2\cdot\overrightarrow{e}_1+\hat{C}_1\cdot\overrightarrow{e}_2
+   $$
+
+   此时在观察第二项噪声，会发现$\hat{C}_1\cdot \overrightarrow{e}_2$向量中，每一项最大值为$n\cdot \left\lceil log(q)\right \rceil \times B$，即噪声上限与之前$n\cdot q\cdot B$相比降低了很多。
+
+   尽管通过以上策略将同态乘法的噪声变低，但每进行一次乘法其噪声也会随之变大。比如再进行一次乘法，则会得到三组噪声，并且最大的一组噪声的噪声上限变为$(n\cdot \left\lceil log(q)\right \rceil)^2\times B$，如下推导所示。
+   $$\begin{aligned}
+   (\hat{C3}\cdot\hat{C1}\cdot\hat{C2})\cdot G \cdot \overrightarrow{s} &= (\mu_1\cdot \mu_2\cdot \mu_3)\cdot G \cdot \overrightarrow{s} + (\mu_1\cdot \mu_2)\cdot \overrightarrow{e}_3 + \hat{C}_3\cdot(\mu_2\cdot\overrightarrow{e}_1+\hat{C}_1\cdot\overrightarrow{e}_2)\\
+   &=(\mu_1\cdot \mu_2\cdot \mu_3)\cdot G \cdot \overrightarrow{s} + (\mu_1\cdot \mu_2)\cdot \overrightarrow{e}_3 + \mu_2\cdot\hat{C_3}\cdot\overrightarrow{e}_1+\underbrace{\hat{C_3}\cdot\hat{C}_1\cdot\overrightarrow{e}_2}_{max\_error}
+   \end{aligned}
+   $$
+
+   因此，此时我们在该系统下仍然只能进行有限次同态运算，我们用一个数字$L$来量化一个噪声区间中可以进行的同态运算次数。也就是说，当我们对于一个刚刚生成的低噪声密文进行L+1次同态运算后（一般为乘法，从上述也可以看出同态乘法增大噪声的速率远快于加法），密文的噪声会过大导致解密失败。下图很好的描述了噪声的增长过程：
+   <div align = center><img src="../../resources/pictures/同态运算中的噪声增长过程.jpg" >
+
+   <div align = left>
+   
+   综上，我们成功构造出了一个计算任意计算深度小于$L$的FHE系统（LFHE）。接下来我们讲述bootstrapping及GSW全同态加密的构造过程。
+
+   ### bootstrapping
