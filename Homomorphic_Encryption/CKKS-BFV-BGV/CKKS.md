@@ -48,21 +48,21 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
 
 <img src="../../resources/pictures/CKKS-encode.png">
 
-消息向量为 $ z $ , 编码是将消息向量编码为多项式 $ m(X)\in \mathbb{Z}[X]/(X^N+1) $ , 解码就是将本原根带入多项式计算 $ m(\xi_i)=\Delta \cdot z_i $ 。将解码转换定义为 $ \sigma(m)=\{m(\xi_{1}),m(\xi_{3}),...,m(\xi_{2N-1})\} $ , 将编码过程定义为 $ \sigma^{-1} $ 。
+消息向量为 $ z $ , 编码是将消息向量编码为多项式 $ m(X)\in \mathbb{Z}[X]/(X^N+1) $ , 解码就是将本原根带入多项式计算 $ m(\xi_i)=\Delta \cdot z_i $ 。将解码转换定义为 $ \sigma(m)=\{m(\xi^{1}),m(\xi^{3}),...,m(\xi^{2N-1})\} $ , 将编码过程定义为 $ \sigma^{-1} $ 。
 其中 $ \Delta $ 为缩放因子(scaling factor)， 用于保证精度，编码时先乘 $ \Delta $ 再做“坐标随机取整”, 解码之后乘 $ \Delta^{-1} $ 得到明文。
 
 整个编码的过程：先使用 $ \pi^{-1} $ 变换扩展明文空间( $ \mathbb{C}^{N/2} \Rightarrow \mathbb{C}^{N} $ )，先乘缩放因子 $ \Delta $ ，再做“坐标随机取整”( $ \mathbb{C}^{N} \Rightarrow \mathbb{Z}^{N} $ )，再使用变换 $ \sigma^{-1} $ 得到编码的多项式( $ \mathbb{Z}^{N} \Rightarrow \mathbb{Z}^N/(X^N+1) $ )，
 
 整个解码过程：与编码过程相反。
 
-编解码可以用下面的矩阵向量乘形式表达（此处省略了 $ \Delta $ ）:
+编解码可以用下面的矩阵向量乘形式表达（此处省略了缩放因子 $ \Delta $ ）:
  $$ {\textstyle \sum_{j=1}^{N-1}}\alpha_j(\xi^{2i-1})^j=z_i,i=1,2,...,N \Rightarrow A\alpha=z $$ 
 
  $$ A=\begin{pmatrix}
-  &1  &\xi_1  &... &\xi_1^{N-1}\\
-  &1  &\xi_3  &... &\xi_3^{N-1}\\
+  &1  &\xi^1  &... &\xi^{N-1}\\
+  &1  &\xi^3  &... &\xi^{3(N-1)}\\
   &...  &...  &... &...\\
-  &1  &\xi_{2N-1}  &... &\xi_{2N-1}^{N-1} 
+  &1  &\xi^{2N-1}  &... &\xi^{(2N-1)(N-1)} 
 \end{pmatrix}, \alpha= \begin{pmatrix}
  \alpha_0\\
  \alpha_1\\
@@ -74,12 +74,27 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
 ...\\
  z_{N-1} 
 \end{pmatrix} $$ 
-其中A为范德蒙德矩阵， $ \alpha $ 为多项式系数。
+其中A为关于 $(\xi^{2i-1})_{i=1,2,...,N} $ 范德蒙德矩阵， $ \alpha $ 为多项式系数, $z $ 是需要编码的复数向量。
 
-其中 $ \xi_i $ 是分圆多项式本原根。M次分圆多项式 $ \Phi_M(X)=X^N+1 $ , 分圆多项式具体见第9节，度数 $ N=\phi(M) $ (欧拉函数)， $ N $ 是2的幂次，此时 $ M=2N $ , 令 $ \xi_M=e^{2i\pi/M} $ 为M次单位原根, 分圆多项式有N个本原根，记为 $ \xi_i $ ， $ i\in \mathbb{Z}_M^* $ (i为模M的剩余类，个数为 $ \phi(M) $ )
+其中 $ \xi^i $ 是分圆多项式本原根。M次分圆多项式 $ \Phi_M(X)=X^N+1 $ , 分圆多项式具体见第9节，度数 $ N=\phi(M) $ (欧拉函数)， $ N $ 是2的幂次，此时 $ M=2N $ , 令 $ \xi_M=e^{2i\pi/M} $ 为M次单位原根, 分圆多项式有N个本原根，记为 $ \xi^i $ ， $ i\in \mathbb{Z}_M^* $ (i为模M的剩余类，个数为 $ \phi(M) $ )
 
 例如： $ M=8，N=4，i=1,3,5,7 $ 
-> 注：
+> 注1：这里还有另一种方法构造 $\mathbb{Z_M^*} $ 和本原根：
+> 例如将5作为生成元，可以构造一个阶为 $N/2 $ 的模的乘5循环群 $\{5^j \bmod M|j \in[0,N/2] \} $ 此外这个群乘-1也构成一个乘5循环群 $\{-5^j \bmod M|j \in[0,N/2] \} $ 这两个乘法群构成一个完整的 $\mathbb{Z_M^*} $ 
+>
+>例如：对于M=16，两个阶位4的乘法群为[1,5,9,13], [15,11,7,3]。
+>
+>对于分圆多项式 $ \Phi_M(X)=X^N+1 $ 的某个M次单位原根 $\zeta $ , 令 $\zeta_j=\zeta^{5^j}, 0\le j<N/2 $, ${\zeta_{j}, \overline{\zeta_{j}}: 0 \leq j<N / 2} $ 组成了单位原根的集合。
+>
+> 例如：对于 $X^8+1 $ :
+> $\zeta_0=\zeta $, $\zeta_1=\zeta^5 $, $\zeta_2=\zeta^{9} $, $\zeta_3=\zeta^{13} $,
+>
+> $\bar{\zeta}_0=\zeta^{15} $, $\bar{\zeta}_1=\zeta^{11} $, $\bar{\zeta}_2=\zeta^7 $, $\bar{\zeta}_3=\zeta^3 $,
+>
+> 此时解码编码函数也可以写成下面的形式：
+><img src="../../resources/pictures/CKKS-decode-2.png">
+
+> 注2：
 >
 >(1) 首先将 $ \mathbb{C}^{N/2} $ 扩展为 $ \mathbb{C}^{N} $ ： $ \mathbb{H} = \{z\in \mathbb{C}^N|z_j=\bar{z_{N-j}}\}, $ ；
 >
@@ -127,20 +142,40 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
  $$ \mathcal{C}_{Mult}(c,c')=\mathcal{c}_{mult}=(d_0,d_1,d_2)=(c_0\cdot c_0',c_0\cdot c_1'+c_0'\cdot c_1,c_1\cdot c_1') $$ 
 这里可以看到密文大小增加了，如此下去进行多次乘法，密文规模呈指数增长，因此我们需要采用一种方法解决密文规模增长过快的问题，这就是重线性化，详细见第9节。
 
+这里还有一个问题，CKKS将明文编码为多项式，再进行加密。后续密文乘法实际上就是多项式乘法，这里一般采用NTT（数论变换，Number Theoretical Transfer）将多项式转换为点值形式逐点相乘，并采用逆变换iNTT将点值形式再转换为多项式系数形式。NTT具体流程参考[NTT](./NTT.md)
+
 ## 6. CKKS的同态旋转(也可以叫移位，rotation)
 <font color="orange">什么是旋转？为什么需要这个过程？需要先解释一下这个问题。</font>
 
+<img src="../../resources/pictures/matrix-mul.png">
+
+在计算矩阵向量乘法时，例如 $m=Az$ 其中A是明文，z是密文，要在打包的情况下进行计算，打包支持的乘法运算是向量点乘，矩阵乘法是每行做了内积。所以如何在明文打包的情况下，通过向量两两乘法来构造一个矩阵乘法是一个难点。
+
+如下图，如果采用一般的思路，就需要分别加密k个密文 $\{z_i,...,z_i \}_{0\le i<k} $ ，采用改进的思路就可以只用一个密文 $\{z_0,...,z_{k-1} \} $ 。
+
+<img src="../../resources/pictures/matrix-mul1.png">
+
+采用小步大步法减少旋转次数：
+<img src="../../resources/pictures/matrix-mul2.png">
+
 ### 6.1 明文
-在明文状态下进行rotation很简单。
+在明文状态下进行rotation很简单。例如下图，将 $x $ 替换为 $x^5 $ 再通过模运算就可以得到旋转结果。
+<img src="../../resources/pictures/CKKS-rotation.png">
 
 ### 6.2 密文
 由于旋转一般是在同态计算过程中用到的，因此一般是在密态下对密文进行旋转，。密文下进行rotation就复杂一些了，需要用到一个KeySwitch的过程，详见8节。
 这里设密文为 $ ct=(b,a) $ , 解密方法为： $ b+a\cdot s=m+e $ 。
 
+<img src="../../resources/pictures/CKKS-rotation2.png">
+
 密文旋转, 我们可以看做是找到一个映射 $ \varphi $ , 使得 $ \varphi(ct)=(\varphi(b),\varphi(a)) $ ，其中密文 $ \varphi(ct) $ 对应的私钥是 $ \varphi(s) $ 对应的明文是 $ \varphi(m) $ ： $ \varphi(b)+\varphi(a)\cdot \varphi(s)=\varphi(m)+\varphi(e) $ 
 
-在密文 $ ct $ 上进行 $ \varphi(\cdot) $ 变化，通过使用 $ KeySwitch $ 将密文 $ ct $ 变为密文 $ \varphi(ct) $ (私钥为 $ \varphi(s) $ 明文为 $ \varphi(m) $ )，实现旋转： $$ rk_r=KSGen_s(\varphi_r(s)) $$ 
+在密文 $ ct $ 上进行 $ \varphi(\cdot) $ 变化，通过使用 $ KeySwitch $ 将密文 $ ct $ 变为密文 $ \varphi(ct) $ (私钥为 $ s $ 明文为 $ \varphi(m) $ )，实现旋转： $$ rk_r=KSGen_s(\varphi_r(s)) $$ 
  $$ Rot(ct;r)=KeySwitch(\varphi(ct),rk_r) $$ 
+
+>注：求共轭的思想与旋转（rotation）一致，也就是将 $\varphi $ 替换为 $\varphi(x):x^{-1} $ 
+>
+>例如将 $[\zeta,\zeta^5,\zeta^9,\zeta^{13}] $ 变成 $[\zeta^{15},\zeta^{11},\zeta^{7},\zeta^3] $ 对应共轭操作
 
 ## 7. 重缩放
 在编码时为了保证精度，乘了一个缩放因子(scaling factor） $ \Delta $ ,此时明文为 $ \Delta\cdot z $  当执行密文乘法时，所对应明文变成了 $ \Delta^2\cdot z_1z_2 $ , 放大因子呈指数增长，因此需要引入重缩放(再缩减，rescaling)技术，每次同态乘法后对密文除以 $ \Delta $ , 将明文变为 $ \Delta\cdot z_1z_2 $ 。
@@ -171,7 +206,15 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
  $$ (b,a)=(b_1,0)+\left\lfloor P^{-1}\cdot a_1\cdot ksk \right\rfloor\bmod Q $$ 
 此时得到的密文 $ ct $ 现在对应的私钥就是s了。
 
-用途：重线性化、同态rotation、求原根序列共轭；
+> 正确性推导：
+>   $$b+as = b_1+\lfloor P^{-1}\cdot a_1\cdot b' \rfloor + (\lfloor P^{-1}\cdot a_1\cdot a' \rfloor)s $$  
+>   $$ =b_1+ P^{-1}\cdot a_1\cdot (-a's+e'+Ps')  + P^{-1}\cdot a_1\cdot a's + \epsilon $$
+>   $$ =b_1+a_1s'+P^{-1}a_1e'+\epsilon$$
+>   $$ =m+e_1+P^{-1}a_1e'+\epsilon $$ 
+>   $$\approx m$$
+
+用途：同态rotation、求共轭；
+
 
 ## 9. 重线性化
 
@@ -181,9 +224,9 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
  $$ Decrypt((d_0',d_1'),s)=d_0'+d_1'\cdot s=d_0+d_1\cdot s+d_2\cdot s^2=Decrypt(c,s)\cdot Decrypt(c',s) $$ 
 具体来说重线性化就是保证解密的时候只需要用到s，而不需要用到s的平方，因此每次执行完成密文乘密文的乘法后进行重线性化，可以得到大小不变的密文，采用相同的解密电路。
 
-现在需要定义Relin，我们需要找到一对多项式使得： $ d_0'+d_1'\cdot s=d_0+d_1\cdot s+d_2\cdot s^2 $ ; 可以定义 $ (d_0',d_1')=(d_0,d_1)+P $ , 其中P表示一对多项式，例如最简单的： $ Decrypt(P,s)=d_2\cdot s^2 $ 
+现在需要定义Relin，我们需要找到一对多项式使得： $ d_0'+d_1'\cdot s=d_0+d_1\cdot s+d_2\cdot s^2 $ ; 可以定义 $ (d_0',d_1')=(d_0,d_1)+P $ , 其中 $P $ 表示一对多项式，例如最简单的： $ Decrypt(P,s)=d_2\cdot s^2 $ 
 
->这里可以设置一个计算密钥用于计算P，  $ evk=(-a_0\cdot s+e_0+s^2,a_0) $ , 其中 $ e_0 $ 是一个小的随机多项式， $ a_0 $ 是一个在 $ R_q $ 上均匀采样的多项式，然后我们计算 $ Decrypt(evk,s)=e_0+s^2 $ , 这个计算密钥 $ evk $ 可以公开，基于RLWE问题的困难性是很难根据该计算密钥提取出 $ s $ 的。
+>这里可以设置一个计算密钥用于计算 $P $ ，  $ evk=(-a_0\cdot s+e_0+s^2,a_0) $ , 其中 $ e_0 $ 是一个小的随机多项式， $ a_0 $ 是一个在 $ R_q $ 上均匀采样的多项式，然后我们计算 $ Decrypt(evk,s)=e_0+s^2 $ , 这个计算密钥 $ evk $ 可以公开，基于RLWE问题的困难性是很难根据该计算密钥提取出 $ s $ 的。
 >
 >此时，为了解密出 $ d_2\cdot s^2 $ , 可以计算  $ P=d_2\cdot evk =(d_2\cdot (-a_0\cdot s+e_0+p\cdot s^2),a_0) $ , 然后 $ Decrypt(P,s)=d_2\cdot s^2+d_2\cdot e_0 $ , 但是又有个新问题，在实际情况中 $ d_2\cdot e_0 $ 会比较大而导致无法忽略，进而导致噪声过大解密失败。
 
@@ -193,7 +236,7 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
 >即： $$ Decrypt(P,s)=p^{-1}\cdot d_2\cdot e_0+d_2\cdot s^2\approx d_2\cdot s^2 $$ 
 >其中 $ p^{-1}\cdot d_2\cdot e_0 $ 很小可以约去。
 
-因此为了定义重线性化，我们定义了一个计算密钥，将其定义为： $$ Relin((d_0,d_1,d_2,evk))=(d_0,d_1)+\left\lfloor p^{-1}\cdot d_2\cdot evk\right\rfloor $$ 
+将重线性化定义为： $$ Relin((d_0,d_1,d_2,evk))=(d_0,d_1)+\left\lfloor p^{-1}\cdot d_2\cdot evk\right\rfloor $$ 
 
 ## 10. 分圆多项式
 使用分圆多项式的好处：（1）保证了环LWE问题的分布随机性；（2）另一方面能够提高计算效率；
@@ -212,7 +255,7 @@ n次分圆多项式是 $ x^n-1 $ 的一个“最大”的不可约多项式因�
 
 例如当n=5时，相当于对圆5等分：
 
-<image src="../../resources/pictures/5circle.jpg" width="300" height="300">
+<image src="../../resources/pictures/5circle.jpg" width="300" height="330">
 
 根据欧拉公式 $e^{ix}=\cos x+i\sin x $ 可以使用 $e^{2\pi i\frac{k}{n}}(0\le k <n) $ 表示所有的n次单位根, <font color="orange">特别的当k与n互素时，时n次单位原根。</font>
 
