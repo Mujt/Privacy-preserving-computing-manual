@@ -1,3 +1,4 @@
+# CKKS算法
 ## 1. 概述
 CKKS(Cheno-Kim-Kim-Song)是一种支持浮点数进行近似值计算的全同态加密方法。传统的全同态加密算法是在解密时通过取模将明文与噪声隔开获得精确明文值。再CKKS中将噪声视为明文的一部分，以预定的精度输出明文近似值。
 在同态计算中，计算结果的高有效位(MSBs)能够保留，低有效位(LSBs)在重缩放的过程中被舍弃: 将重要的信息放在MSBs，将误差放在LSBs。CKKS算法的依赖性依赖于(R)LWE困难问题假设。
@@ -21,6 +22,16 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
 
 <img src="../../resources/pictures/CKKS-rescale.jpg" width="500" height="500">
 
+### CKKS背景
+[参考博客](https://blog.csdn.net/qq_45358572/article/details/125403483)
+#### 提出背景
+
+1978年，Rivest、Adleman和Dertouzos在文献[1]中就贷款公司数据库的保密问题与计算问题进行了讨论，并首次提出了同态加密的加密方式。后来，随着云计算、大数据、人工智能、机器学习等新兴技术不断兴起，人们越来越发现同态加密对于现阶段信息安全的重要性。2009年，Gentry首次提出自举技术[2]，实现了第一个全同态加密方案。2010年，Dijk又首次实现了基于整数环上FHE的DGHV方案[4]。2012年，Kipnis等人给出了基于矩阵和多项式的无噪声FHE方案[5]。2016年，Jaschke等人通过将有理数近似表示为整数[6]，实现了明文空间为实数的FHE方案。2017年，Cheon等人实现了可进行浮点数近似计算的层次型FHE方案[3]（下文称CKKS方案），一年后，Cheon等人又通过自举技术，将CKKS方案扩展为全同态加密方案[7]，同年，也通过RNS实现了CKKS方案的RNS变体[8]。
+
+#### 研究进展
+<img src="../../resources/pictures/CKKS-re.jpg">
+欧密18[7] 给出了CKKS方案的自举方案，欧密19[9] 对其进行了改进；而SAC18[8] 则是提出了CKKS方案的RNS变体，但是其使用的是欧密18中的自举方案，自举精度远达不到实际需求；故在RSA20[10] 中，又结合欧密19中的自举改进对RNS-CKKS方案的自举进行了改进；21年的欧密会上，又有两个方案被相继提出，一个是在RSA20的基础上对自举精度进行了提升[11] ，另一个则是提出了一种新的自举方案[12]，相较之前的方案，精度、效率和安全性上都有了明显的提升。
+
 ## 2. 整体流程
 ![CKKS](../../resources/pictures/CKKS.png)
 
@@ -30,9 +41,9 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
 
 选择合适的基 $ p > 0 $ , 模数 $ q_0 $ , 令 $ q_l = p^l \cdot q_0, 0 < l \le L $ ;
 1. 密钥生成 $ KeyGen(1^{\lambda}) $ : 
-输入安全参数 $ \lambda $ ，选择合适的二次幂分圆多项式 $ M=M(\lambda, q_L) $ ，正整数 $ h=h(\lambda,q_L) $ ， 整数 $ P=P(\lambda,q_L) $ 和 $ \sigma=\sigma(\lambda,q_L) $ 。抽取 $ s \longleftarrow \mathcal{HWT} (h), a \longleftarrow \mathcal{R}_{q_L},  e \longleftarrow \mathcal{DG}(\sigma^2) $ 。令私钥 $ sk \longleftarrow (1,s) $ , 公钥 $ pk \longleftarrow (b,a) \in \mathcal{R}_{q_L}^2 $ ，其中 $ b \longleftarrow -a \cdot s+e\ mod\ q_L $ 。抽取 $ a' \longleftarrow \mathcal{R}_{P \cdot q_L}, e' \longleftarrow \mathcal{DG}(\sigma^2) $ ,计算公钥 $ evk \longleftarrow (b',a') \in \mathcal{R}_{q_L}^2 $ , 其中 $ b' \longleftarrow -a' \cdot s+e'+Ps^2\ mod\ P \cdot q_L $ 。算法输出 $ (sk,pk,evk) $ 
-2. 加密算法 $ CKKS.Enc_{pk}(m) $ : 选取 $ v \longleftarrow \mathcal{ZO}(0.5) $ 及 $ e_0,e_1 \longleftarrow \mathcal{DG}(\sigma^2) $ ，输出密文 $ c=v \cdot pk+(m+e_0,e_1)\ mod \ q_l $ ;
-3. 解密算法 $ CKKS.Dec_{sk}(c) $ ：对于密文 $ c = (b,a) $ ,输出明文 $ m=b+a \cdot sk\ mod\ q_L $ ;
+输入安全参数 $ \lambda $ ，选择合适的二次幂分圆多项式 $ M=M(\lambda, q_L) $ ，正整数 $ h=h(\lambda,q_L) $ ， 整数 $ P=P(\lambda,q_L) $ 和 $ \sigma=\sigma(\lambda,q_L) $ 。抽取 $ s \longleftarrow \mathcal{HWT} (h), a \longleftarrow \mathcal{R}_{q_L},  e \longleftarrow \mathcal{DG}(\sigma^2) $ 。令私钥 $ sk \longleftarrow (1,s) $ , 公钥 $ pk \longleftarrow (b,a) \in \mathcal{R}_{q_L}^2 $ ，其中 $ b \longleftarrow -a \cdot s+e\ mod\ q_L $ 。抽取 $ a' \longleftarrow \mathcal{R}_{P \cdot q_L}, e' \longleftarrow \mathcal{DG}(\sigma^2) $ ,计算公钥 $ evk \longleftarrow (b',a') \in \mathcal{R}_{P\cdot q_L}^2 $ , 其中 $ b' \longleftarrow -a' \cdot s+e'+Ps^2\ mod\ P \cdot q_L $ 。算法输出 $ (sk,pk,evk) $ 
+2. 加密算法 $ CKKS.Enc_{pk}(m) $ : 选取 $ v \longleftarrow \mathcal{ZO}(0.5) $ 及 $ e_0,e_1 \longleftarrow \mathcal{DG}(\sigma^2) $ ，输出密文 $ c=v \cdot pk+(m+e_0,e_1)\ mod \ q_L $ ;
+3. 解密算法 $ CKKS.Dec_{sk}(c) $ ：对于密文 $ c = (b,a) $ ,输出明文 $ m=b+a \cdot sk\ mod\ q_l $ ;
 4. 同态加法 $ CKKS.Add(c_1,c_2) $ : 对于两个密文 $ c_0,c_1 \in \mathcal{R}_{q_l}^2 $ , 输出 $ c_{add} \leftarrow c_1+c_2\ mod\ q_l $ ;
 5. 同态乘法 $ CKKS.Mul(c_1,c_2) $ : 对于 $ c_1=(b_1,a_1), c_2=(b_2,a_2) \in \mathcal{R}_{q_l}^2 $ ，计算 $ (d_0,d_1,d_2) = (b_1b_2,a_1b_2+a_2b_1,a_1a_2)\ mod\ q_l $ 输出： $ c_{mult}\leftarrow(d_0,d_1)+ \left \lfloor P^{-1}\cdot d_2 \cdot evk \right \rceil\ mod\ q_l $ 
 6. 重缩放 $ CKKS.RS_{l\leftarrow l'}(c) $ : 对于 $ c \in \mathcal{R}_{q_l}^2 $ ，输出 $ c' \leftarrow \left \lfloor \frac{q_{l'}}{q_l} \cdot c \right \rceil \bmod q_{l'} $ 
@@ -115,6 +126,8 @@ CKKS解决该问题的方法是将加密引入的噪声视为误差的一部分�
 >(2) 将加密的明文多项式 $ t(X)=(c_0+c_1s)\bmod Q_0 $ 做密文下的解码运算。这里解码是将 $ X $ 用原根进行带入，得到解码后的向量 $ t\bmod Q_0 $ ，该过程可以通过矩阵向量乘法运算实现。由于“编码”“解码”的可逆性，t包含的信息没有被消除。
 >
 >(3) 我们要对 $ t\bmod Q_0 $ 在密文下进行正弦近似，得到 $ t \bmod q=m $ , 即获得真正的明文m（由于模数的存在，m和 $ t \bmod Q_0 $ 本质上不同），最后再进行编码，将t编码为 $ t(X) $ 
+>
+>注意: 这里Bootstrapping的过程本身也要进行大量的HE计算，消耗乘法深度。
 
 <font color="orange"> 这里可能有个小问题，在加密的情况下进行编解码会否改变明文？当然不会，这里编解码实际上就是一个矩阵向量乘的过程，加法乘法满足同态性。 </font>
 
@@ -268,5 +281,73 @@ n次分圆多项式为 $\Phi_n(x) $ ，该次数n就是n次单位原根的个数
 >最小多项式：假设a是域F（元素个数为n）的任意元素，a的次数d是n的因子,则a的最小多项式为:
 > $$f_{\alpha}(x)=(x-\alpha)(x-\alpha^q)...(x-\alpha^{q^{d-1}}) $$ 
 
+## 11. RNS-CKKS(CKKS的变体)
+为了有效地实现多项式运算，Gentry等人基于CRT提出了一种双CRT表示的分圆多项式表示方案[1]。第一层CRT层通过使用RNS将多项式分解成具有较小模的多项式分量。第二层则是通过NTT的方法，将每个小多项式转换为整数向量。在双CRT表示中，任意多项式都可以用由小整数组成的矩阵来识别，并且可以通过执行不同分量的模操作来实现有效的多项式运算。
+
+### 11.1 Residue number system(RNS, 剩余数系统)
+为了有效的操作大整数吗，CKKS一般会应用RNS。在 $R_Q $ 中，所有的整数运算都是相对于多项式模量 $Q $ 的模运算。这里可以将 $Q $ 设置为一些列RNS质数的积： $q_0,...,q_{L-1} $ , 每一个质数都足够小与机器字长相匹配，可以将多项式的每个系数进行分解(中国剩余定理)：
+$$RNS:a \rightarrow(a\bmod q_0,a\bmod q_1,...,a\bmod q_{L-1}) $$
+这样，大整数运算就可以被一系列的 $L $ 并行的模 $q_i $ 运算取代。
+
+RNS将一个度为N-1的多项式转换为 $L\times N $ 矩阵。每一行称为多项式的一个分支，每一行与质数 $q_i $ 相联系。每一个分支可以被视作一个 $R_{q_i} $ 的单个多项式。
+在进行多项式乘法等计算时，(i)NTT分别计算每个多项式分支。
+
+### 11.2 Base conversion(BConv, 基底转换)
+当两个多项式具有不同的多项式模量时，采用BConv来匹配模量。当必须将一个多项式 $P\in R_Q $ 用一个evaluation key $evk \in R_{PQ}^{2\times dnum} $ 做乘法时（同态乘HMult、同态rotation HRot）， 需要进行BConv，这个过程与key switching过程相似。
+
+HMult计算采用单个evk（$evk_{mult} $）,HRot计算采用分离的evk（$evk_{rot}^{(r)}$），r表示旋转的位数。要求HMult和HRot采用一个辅助模数：$P= {\textstyle \prod_{i=0}^{K-1}} p_i $ 和 $ Q={\textstyle \prod_{i=0}^{L-1}} q_i$。每一个 $p_i$ 大于 $max(q_i) $。 
+
+使用RNS，可以将每个 $evk $ 转换为 $dnum=\left \lceil L/K \right \rceil $(分解数目)对 $(L+K)\times N$的矩阵。
+
+BConv的计算包含一个 $P\in R_Q $ 的 $ L\times N $ 的矩阵和一个基表（base table） $K\times L $ 矩阵的乘法，得到结果 $P' \in R_P $ 的 $K\times N $矩阵。 $P' $ 与 $P $ 拼接得到一个扩展多项式（extended polynomial）$P''\in R_{PQ} $， 一个 $(L+K)\times N $ 矩阵。一个类似的转换 $R_{PQ} \rightarrow R_Q $ 也是用BConv。BConv要求输入在计算前用系数表示，因此序列 $INTT\rightarrow BConv \rightarrow NTT $ 比较常见。
+
+
+
+### RNS-CKKS流程
+Cheon等人提出了CKKS方案的RNS变体[2]，实现了在RNS上的近似全同态加密方案，具体算法如下：
+<img src="../../resources/pictures/RNS-CKKS-setup.png">
+<img src="../../resources/pictures/RNS-CKKS-kgen.png">
+<img src="../../resources/pictures/RNS-CKKS-encdec.png">
+<img src="../../resources/pictures/RNS-CKKS-encdec1.png">
+<img src="../../resources/pictures/RNS-Add.png">
+<img src="../../resources/pictures/RNS-mul.png">
+<img src="../../resources/pictures/RNS-CKKS-RS.png">
+
+<font color="orange">
+注：
+</font>
+
+## 12. CKKS的安全性
+
+
 ## Q&A
 1. 
+
+
+## 参考文献
+参考文献
+[1] Rivest R L , Adleman L M , Dertouzos M L . On Data Banks and Privacy Homomorphisms[J]. Foundations of Secure Compuation, 1978.
+
+[2] Gentry C . Fully homomorphic encryption using ideal lattices[J]. Stoc, 2009.
+
+[3] Cheon J H , Kim A , Kim M , et al. Homomorphic Encryption for Arithmetic of Approximate Numbers[C]// International Conference on the Theory and Application of Cryptology and Information Security. Springer, Cham, 2017.-1
+
+[4] Dijk M V , Gentry C , Halevi S , et al. Fully Homomorphic Encryption over the Integers[C]// International Conference on Theory & Applications of Cryptographic Techniques. Springer, Berlin, Heidelberg, 2010.
+
+[5] Aviad Kipnis E H . 1 Efficient Methods for Practical Fully-Homomorphic Symmetric-key Encryption, Randomization, and Verification[J]. Urban Research & Practice, 2012, 7(3):255-257.
+
+[6] Jschke A , Armknecht F . Accelerating Homomorphic Computations on Rational Numbers[J]. Springer, Cham, 2016.
+
+[7] Cheon J H , Han K , Kim A , et al. Bootstrapping for Approximate Homomorphic Encryption[J]. Annual International Conference on the Theory and Applications of Cryptographic Techniques, 2018.-2
+
+[8] Cheon J H , Han K , Kim A , et al. A Full RNS Variant of Approximate Homomorphic Encryption[J]. Selected areas in cryptography :. annual international workshop, SAC. proceedings. SAC (Conference), 11349:347-368.-2
+
+[9] Chen H , Chillotti I , Song Y . Improved Bootstrapping for Approximate Homomorphic Encryption[C]// International Conference on the Theory & Applications of Cryptographic Techniques. Springer, Cham, 2019.-3
+
+[10] Han K , D Ki. Better Bootstrapping for Approximate Homomorphic Encryption[C]// Cryptographers’ Track at the RSA Conference. Springer, Cham, 2020.-4
+
+[11] Lee J W , Lee E , Lee Y , et al. High-Precision Bootstrapping of RNS-CKKS Homomorphic Encryption Using Optimal Minimax Polynomial Approximation and Inverse Sine Function[M]. 2021.-5
+
+[12] Bossuat J P , Mouchet C , Troncoso-Pastoriza J , et al. Efficient Bootstrapping for Approximate Homomorphic Encryption with Non-sparse Keys[M]. 2021.-5
+
+[13] Gentry C , Halevi S , Smart N P . Homomorphic Evaluation of the AES Circuit[C]// Annual Cryptology Conference. Springer, Berlin, Heidelberg, 2012.
